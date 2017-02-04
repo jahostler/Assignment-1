@@ -42,16 +42,15 @@ bool inTriangle(Triangle t, Vertex p)
 
 	if (alpha > 0 && beta > 0 && gamma > 0)
 	{
-		//cout << "true\n";
 		return true;
 	}
 	else
 	{
-		//cout << "false\n";
 		return false;
 	}
 }
 
+//get bounding box of entire mesh
 vector<float> getMeshBoundingBox(const vector<Vertex>& vs)
 {
 	float xmin = std::numeric_limits<float>::max();
@@ -73,66 +72,36 @@ vector<float> getMeshBoundingBox(const vector<Vertex>& vs)
 	return{ xmin, ymin, xmax, ymax, zmin, zmax };
 }
 
-//find bounding box of entire mesh
-vector<float> getBigBoundingBox(const vector<Triangle>& ts)
-{
-	vector<float> xvals;
-	vector<float> yvals;
 
-	float xmin = std::numeric_limits<float>::max();
-	float ymin = std::numeric_limits<float>::max();
-	float xmax = std::numeric_limits<float>::min();
-	float ymax = std::numeric_limits<float>::min();
-
-
-	
-	//find largest/smallest x and y values
-	for (auto tri_it = ts.begin(); tri_it != ts.end(); ++tri_it)
-	{
-		xmax = max(xmax, tri_it->getV1().getX());
-		xmax = max(xmax, tri_it->getV2().getX());
-		xmax = max(xmax, tri_it->getV3().getX());
-
-		xmin = min(xmin, tri_it->getV1().getX());
-		xmin = min(xmin, tri_it->getV2().getX());
-		xmin = min(xmin, tri_it->getV3().getX());
-
-		ymax = max(ymax, tri_it->getV1().getY());
-		ymax = max(ymax, tri_it->getV2().getY());
-		ymax = max(ymax, tri_it->getV3().getY());
-
-		ymin = min(ymin, tri_it->getV1().getY());
-		ymin = min(ymin, tri_it->getV2().getY());
-		ymin = min(ymin, tri_it->getV3().getY());
-	}
-	return{ xmin, ymin, xmax, ymax };
-}
 //returns triangle with appropriate scale and translation values
 Triangle worldToImage(Triangle &t, float scale, float tx, float ty)
 {
+	//cout << "World Triangle: \n";
+	//printTriangleWithColor(t);
 	Vertex v1(scale * t.getV1().getX() + tx, scale * t.getV1().getY() + ty, t.getV1().getZ(), t.getV1().getR(), t.getV1().getG(), t.getV1().getB());
 	
 	Vertex v2(scale * t.getV2().getX() + tx, scale * t.getV2().getY() + ty, t.getV2().getZ(), t.getV2().getR(), t.getV2().getG(), t.getV2().getB());
 
 	Vertex v3(scale * t.getV3().getX() + tx, scale * t.getV3().getY() + ty, t.getV3().getZ(), t.getV3().getR(), t.getV3().getG(), t.getV3().getB());
-	return Triangle(v1,v2,v3);
+
+	Triangle new_t = Triangle(v1, v2, v3);
+	//cout << "Image Triangle: \n";
+	//printTriangleWithColor(new_t);
+	//cout << "\n\n";
+	return new_t;
 }
 
 //returns dimensions of single triangle bounding box
-//vector: {xmin, ymin, xmax, ymax}
 vector<float> getBoundingBox(const Triangle& t)
 {
-	//vector<float> xvals = t.getXVals();
 	vector<float> xvals;
 	xvals.push_back(t.getV1().getX());
 	xvals.push_back(t.getV2().getX());
 	xvals.push_back(t.getV3().getX());
-	//vector<float> yvals = t.getYVals();
 	vector<float> yvals;
 	yvals.push_back(t.getV1().getY());
 	yvals.push_back(t.getV2().getY());
 	yvals.push_back(t.getV3().getY());
-	//vector<float> zvals = t.getZVals();
 	vector<float> zvals;
 	zvals.push_back(t.getV1().getZ());
 	zvals.push_back(t.getV2().getZ());
@@ -150,6 +119,7 @@ vector<float> getBoundingBox(const Triangle& t)
 	return { xmin, ymin, xmax, ymax, zmin, zmax };
 }
 
+//scales z values to be within 0-255
 float convertZ(float input, float zmin, float zmax)
 {
 	float slope = 255 / (zmax - zmin);
@@ -157,6 +127,7 @@ float convertZ(float input, float zmin, float zmax)
 	return output;
 }
 
+//calculates color and z-values inside triangle
 Vertex interp(Triangle t, float px, float py)
 {
 	Vertex p1 = t.getV1();
@@ -165,13 +136,13 @@ Vertex interp(Triangle t, float px, float py)
 
 	float p1x = p1.getX();
 	float p1y = p1.getY();
-	
+
 	float p2x = p2.getX();
 	float p2y = p2.getY();
-	
+
 	float p3x = p3.getX();
 	float p3y = p3.getY();
-	
+
 	float p1r = p1.getR();
 	float p2r = p2.getR();
 	float p3r = p3.getR();
@@ -206,7 +177,7 @@ int main(int argc, char **argv)
 {
 	srand(time(NULL));
 	if(argc < 6) {
-		cout << "Usage: A1 meshfile filename width heigh mode" << endl;
+		cout << "Usage: A1 meshfile filename width height mode" << endl;
 		return 0;
 	}
 	string meshName(argv[1]);
@@ -255,18 +226,11 @@ int main(int argc, char **argv)
 	{
 		if (i % 3 == 0) // we have 3 floats, make a vertex
 		{
-			//if (atoi(argv[5]) == 0)
-			//{
-				verts.push_back(Vertex(*(it - 2), *(it - 1), *it, rand() % 256, rand() % 256, rand() % 256));
-			//}
-			//else if (atoi(argv[5]) == 1)
-			//{
-			//	verts.push_back(Vertex(*(it - 2), *(it - 1), *it, *it, 0, 0));
-			//}
-			
+			verts.push_back(Vertex(*(it - 2), *(it - 1), *it, rand() % 256, rand() % 256, rand() % 256));		
 		}
 		++i;
 	}
+	//load vertices into triangles
 	if (verts.size() % 3 == 0 && verts.size() > 0)
 	{
 		auto it = verts.begin();
@@ -287,7 +251,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	vector<float> bounding_box = getMeshBoundingBox(verts); //bounding box for entire mesh
+	//calculate mesh bounding box
+	vector<float> bounding_box = getMeshBoundingBox(verts); 
+
 	float xmin = bounding_box[0];
 	float ymin = bounding_box[1];
 	float xmax = bounding_box[2];
@@ -296,48 +262,26 @@ int main(int argc, char **argv)
 	float zmax = bounding_box[5];
 	int width = atoi(argv[3]);
 	int height = atoi(argv[4]);
-	
-
-
-	//cout << "width = " << width << endl;
-	//cout << "height = " << height << endl;
-	//cout << "xmin = " << xmin << endl;
-	//cout << "ymin = " << ymin << endl;
-	//cout << "xmax = " << xmax << endl;
-	//cout << "ymax = " << ymax << endl;
 
 	//find scale
 	float scale;
-	if ((ymax - ymin) > (xmax - xmin)) //height is limiting
+	if (((ymax - ymin) / height) > ((xmax - xmin)/width)) //height is limiting
 	{
-		//cout << "height is limiting\n";
 		scale = (float)(height) / (float)(ymax - ymin);
 
 	}
-		
 	else //width is limiting or dimensions are equal
 	{
-		//cout << "width is limiting or dimensions are equal\n";
 		scale = (float)(width) / (float)(xmax - xmin);
 	}
-		
-	//cout << "scale = " << scale << endl;
-	
-	//find translation
+
+	//find x and y translation
 	float midxw = 0.5*(xmin + xmax); //middle of world
 	float midyw = 0.5*(ymin + ymax);
 	float tx = (width / 2) - (scale*midxw); //x translation
 	float ty = (height / 2) - (scale*midyw); //y translation
-	if (tx < 0 || ty < 0)
-	//{
-	//	cerr << "invalid translation\n";
-	//	cerr << "tx = " << tx << endl;
-	//	cerr << "ty = " << ty << endl;
-//
-	//	return 1;
-	//}
-	//cout << "tx = " << tx << endl;
-	//cout << "ty = " << ty << endl;
+
+	//convert triangles to image coordinates
 	vector<Triangle> img_triangles;
 	for (auto it = triangles.begin(); it != triangles.end(); ++it)
 	{
@@ -345,7 +289,6 @@ int main(int argc, char **argv)
 		img_triangles.push_back(t);
 	}
 
-	//draw bounding boxes
 	auto image = make_shared<Image>(width, height);
 	vector<vector<float>> zbuf(width, vector<float>(height, numeric_limits<float>::min()));
 
@@ -356,27 +299,20 @@ int main(int argc, char **argv)
 		float _ymin = bb[1];
 		float _xmax = bb[2];
 		float _ymax = bb[3];
-		cout << "triangle bb xmin = " << _xmin << endl;
-		cout << "triangle bb ymin = " << _ymin << endl;
-		cout << "triangle bb xmax = " << _xmax << endl;
-		cout << "triangle bb ymax = " << _ymax << endl;
 		for (int y = _ymin; y <= _ymax; ++y) {
 			for (int x = _xmin; x <= _xmax; ++x) {
 				Vertex v = Vertex(x, y, 0, 0, 0, 0);
+				//check if pixel is inside the triangle
 				if (inTriangle(*it, v))
 				{
+					//find color and z-values
 					Vertex pixel = interp(*it, x,y);
-					cout << "pixel x = " << pixel.getX() << endl;
-					cout << "pixel y = " << pixel.getY() << endl;
-					cout << "pixel z = " << pixel.getZ() << endl;
-					cout << "pixel r = " << pixel.getR() << endl;
-					cout << "pixel g = " << pixel.getG() << endl;
-					cout << "pixel b = " << pixel.getB() << endl;
-
-					if (pixel.getZ() > zbuf[pixel.getX()][pixel.getY()])
+					if (pixel.getZ() > zbuf[x][y])
 					{
-						zbuf[pixel.getX()][pixel.getY()] = pixel.getZ();
+						zbuf[x][y] = pixel.getZ();
 						float zcolor = convertZ(pixel.getZ(), zmin, zmax);
+						float ycolor = convertZ(pixel.getY(), ymin*scale + ty, ymax*scale + ty);
+						//check coloring mode
 						if (atoi(argv[5]) == 0)
 						{
 							image->setPixel(pixel.getX(), pixel.getY(), pixel.getR(), pixel.getG(), pixel.getB());
@@ -384,6 +320,10 @@ int main(int argc, char **argv)
 						else if (atoi(argv[5]) == 1)
 						{
 							image->setPixel(pixel.getX(), pixel.getY(), zcolor, 0, 0);
+						}
+						else if (atoi(argv[5]) == 2)
+						{
+							image->setPixel(pixel.getX(), pixel.getY(), ycolor, 0, 255 - ycolor);
 						}
 					}
 					
