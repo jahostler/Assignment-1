@@ -19,6 +19,72 @@
 // You should never do this in a header file.
 using namespace std;
 
+void printTriangle(const Triangle& t)
+{
+	Vertex p1 = t.getV1();
+	Vertex p2 = t.getV2();
+	Vertex p3 = t.getV3();
+
+	float p1x = p1.getX();
+	float p1y = p1.getY();
+	float p2x = p2.getX();
+	float p2y = p2.getY();
+	float p3x = p3.getX();
+	float p3y = p3.getY();
+
+	cout << "v1x: " << p1x << endl;
+	cout << "v1y: " << p1y << endl;
+	cout << "v2x: " << p2x << endl;
+	cout << "v2y: " << p2y << endl;
+	cout << "v3x: " << p3x << endl;
+	cout << "v3y: " << p3y << endl;
+}
+void printTriangleWithColor(const Triangle& t)
+{
+	Vertex v1 = t.getV1();
+	Vertex v2 = t.getV2();
+	Vertex v3 = t.getV3();
+
+	float v1x = v1.getX();
+	float v1y = v1.getY();
+	float v1r = v1.getR();
+	float v1g = v1.getG();
+	float v1b = v1.getB();
+	float v2x = v2.getX();
+	float v2y = v2.getY();
+	float v2r = v2.getR();
+	float v2g = v2.getG();
+	float v2b = v2.getB();
+	float v3x = v3.getX();
+	float v3y = v3.getY();
+	float v3r = v3.getR();
+	float v3g = v3.getG();
+	float v3b = v3.getB();
+
+	/*cout << "v1x: " << p1x << endl;
+	cout << "v1y: " << p1y << endl;
+	cout << "v1r: " << p1r << endl;
+	cout << "v1g: " << p1g << endl;
+	cout << "v1b: " << p1b << endl;
+	cout << "v2x: " << p2x << endl;
+	cout << "v2y: " << p2y << endl;
+	cout << "v2r: " << p2r << endl;
+	cout << "v2g: " << p2g << endl;
+	cout << "v2b: " << p2b << endl;
+	cout << "v3x: " << p3x << endl;
+	cout << "v3y: " << p3y << endl;
+	cout << "v3r: " << p3r << endl;
+	cout << "v3g: " << p3g << endl;
+	cout << "v3b: " << p3b << endl;*/
+
+	cout << "v1: ";
+	cout << "{" << v1x << ", " << v1y << ", " << v1r << ", " << v1g << ", " << v1b << "}" << endl;
+	cout << "v2: ";
+	cout << "{" << v2x << ", " << v2y << ", " << v2r << ", " << v2g << ", " << v2b << "}" << endl;
+	cout << "v3: ";
+	cout << "{" << v3x << ", " << v3y << ", " << v3r << ", " << v3g << ", " << v3b << "}" << endl;
+}
+
 //given Triangle and a Vertex, determine if that Vertex is inside the Triangle
 //credit to http://blackpawn.com/texts/pointinpoly/ and http://stackoverflow.com/questions/13300904/determine-whether-point-lies-inside-triangle
 bool inTriangle(Triangle t, Vertex p)
@@ -110,18 +176,27 @@ vector<float> getBigBoundingBox(const vector<Triangle>& ts)
 //returns triangle with appropriate scale and translation values
 Triangle worldToImage(Triangle &t, float scale, float tx, float ty)
 {
+	//cout << "World Triangle: \n";
+	//printTriangleWithColor(t);
 	Vertex v1(scale * t.getV1().getX() + tx, scale * t.getV1().getY() + ty, t.getV1().getZ(), t.getV1().getR(), t.getV1().getG(), t.getV1().getB());
 	
 	Vertex v2(scale * t.getV2().getX() + tx, scale * t.getV2().getY() + ty, t.getV2().getZ(), t.getV2().getR(), t.getV2().getG(), t.getV2().getB());
 
 	Vertex v3(scale * t.getV3().getX() + tx, scale * t.getV3().getY() + ty, t.getV3().getZ(), t.getV3().getR(), t.getV3().getG(), t.getV3().getB());
-	return Triangle(v1,v2,v3);
+
+	Triangle new_t = Triangle(v1, v2, v3);
+	//cout << "Image Triangle: \n";
+	//printTriangleWithColor(new_t);
+	//cout << "\n\n";
+	return new_t;
 }
 
 //returns dimensions of single triangle bounding box
 //vector: {xmin, ymin, xmax, ymax}
 vector<float> getBoundingBox(const Triangle& t)
 {
+	//cout << "Getting Bounding Box\n";
+	//printTriangle(t);
 	//vector<float> xvals = t.getXVals();
 	vector<float> xvals;
 	xvals.push_back(t.getV1().getX());
@@ -165,13 +240,13 @@ Vertex interp(Triangle t, float px, float py)
 
 	float p1x = p1.getX();
 	float p1y = p1.getY();
-	
+
 	float p2x = p2.getX();
 	float p2y = p2.getY();
-	
+
 	float p3x = p3.getX();
 	float p3y = p3.getY();
-	
+
 	float p1r = p1.getR();
 	float p2r = p2.getR();
 	float p3r = p3.getR();
@@ -201,7 +276,6 @@ Vertex interp(Triangle t, float px, float py)
 	return Vertex(px, py, z, red, blue, green);
 
 }
-
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
@@ -288,6 +362,7 @@ int main(int argc, char **argv)
 	}
 
 	vector<float> bounding_box = getMeshBoundingBox(verts); //bounding box for entire mesh
+	//{xmin, ymin,
 	float xmin = bounding_box[0];
 	float ymin = bounding_box[1];
 	float xmax = bounding_box[2];
@@ -308,7 +383,7 @@ int main(int argc, char **argv)
 
 	//find scale
 	float scale;
-	if ((ymax - ymin) > (xmax - xmin)) //height is limiting
+	if (((ymax - ymin) /height) > ((xmax - xmin)/width)) //height is limiting
 	{
 		//cout << "height is limiting\n";
 		scale = (float)(height) / (float)(ymax - ymin);
@@ -328,14 +403,14 @@ int main(int argc, char **argv)
 	float midyw = 0.5*(ymin + ymax);
 	float tx = (width / 2) - (scale*midxw); //x translation
 	float ty = (height / 2) - (scale*midyw); //y translation
-	if (tx < 0 || ty < 0)
-	//{
-	//	cerr << "invalid translation\n";
-	//	cerr << "tx = " << tx << endl;
-	//	cerr << "ty = " << ty << endl;
-//
-	//	return 1;
-	//}
+	/*if (tx < 0 || ty < 0)
+	{
+		cerr << "invalid translation\n";
+		cerr << "tx = " << tx << endl;
+		cerr << "ty = " << ty << endl;
+
+		return 1;
+	}*/
 	//cout << "tx = " << tx << endl;
 	//cout << "ty = " << ty << endl;
 	vector<Triangle> img_triangles;
@@ -345,38 +420,43 @@ int main(int argc, char **argv)
 		img_triangles.push_back(t);
 	}
 
-	//draw bounding boxes
 	auto image = make_shared<Image>(width, height);
 	vector<vector<float>> zbuf(width, vector<float>(height, numeric_limits<float>::min()));
 
 	for (auto it = img_triangles.begin(); it != img_triangles.end(); ++it)
 	{
+		//printTriangle(*it);
+
+
+
+
 		vector<float> bb = getBoundingBox(*it);
 		float _xmin = bb[0];
 		float _ymin = bb[1];
 		float _xmax = bb[2];
 		float _ymax = bb[3];
-		cout << "triangle bb xmin = " << _xmin << endl;
-		cout << "triangle bb ymin = " << _ymin << endl;
-		cout << "triangle bb xmax = " << _xmax << endl;
-		cout << "triangle bb ymax = " << _ymax << endl;
+		//cout << "triangle bb xmin = " << _xmin << endl;
+		//cout << "triangle bb ymin = " << _ymin << endl;
+		//cout << "triangle bb xmax = " << _xmax << endl;
+		//cout << "triangle bb ymax = " << _ymax << endl;
 		for (int y = _ymin; y <= _ymax; ++y) {
 			for (int x = _xmin; x <= _xmax; ++x) {
 				Vertex v = Vertex(x, y, 0, 0, 0, 0);
 				if (inTriangle(*it, v))
 				{
 					Vertex pixel = interp(*it, x,y);
-					cout << "pixel x = " << pixel.getX() << endl;
+					/*cout << "pixel x = " << pixel.getX() << endl;
 					cout << "pixel y = " << pixel.getY() << endl;
 					cout << "pixel z = " << pixel.getZ() << endl;
 					cout << "pixel r = " << pixel.getR() << endl;
 					cout << "pixel g = " << pixel.getG() << endl;
-					cout << "pixel b = " << pixel.getB() << endl;
+					cout << "pixel b = " << pixel.getB() << endl;*/
 
-					if (pixel.getZ() > zbuf[pixel.getX()][pixel.getY()])
+					if (pixel.getZ() > zbuf[x][y])
 					{
-						zbuf[pixel.getX()][pixel.getY()] = pixel.getZ();
+						zbuf[x][y] = pixel.getZ();
 						float zcolor = convertZ(pixel.getZ(), zmin, zmax);
+						float ycolor = convertZ(pixel.getY(), ymin*scale + ty, ymax*scale + ty);
 						if (atoi(argv[5]) == 0)
 						{
 							image->setPixel(pixel.getX(), pixel.getY(), pixel.getR(), pixel.getG(), pixel.getB());
@@ -384,6 +464,10 @@ int main(int argc, char **argv)
 						else if (atoi(argv[5]) == 1)
 						{
 							image->setPixel(pixel.getX(), pixel.getY(), zcolor, 0, 0);
+						}
+						else if (atoi(argv[5]) == 2)
+						{
+							image->setPixel(pixel.getX(), pixel.getY(), ycolor, 255-ycolor, 0);
 						}
 					}
 					
